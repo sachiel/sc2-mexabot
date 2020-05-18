@@ -61,10 +61,18 @@ def start(update, context):
     )
     update.message.reply_text(message)
 
+    update.message.reply_text('Prueba tambien los comandos:')
+    update.message.reply_text('/hospitales')
+    update.message.reply_text('/capacidad')
+    update.message.reply_text('/conteo')
+
 
 def help(update, context):
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    update.message.reply_text('Prueba con:')
+    update.message.reply_text('/hospitales')
+    update.message.reply_text('/capacidad')
+    update.message.reply_text('/conteo')
 
 
 def conteo(update, context):
@@ -227,7 +235,7 @@ def main():
         dp.add_handler(CommandHandler("start", start))
         dp.add_handler(CommandHandler("help", help))
         dp.add_handler(CommandHandler("hospitales", hospitales))
-        dp.add_handler(CommandHandler("capacidad_hospitalaria", capacidad_hospitalaria))
+        dp.add_handler(CommandHandler("capacidad", capacidad_hospitalaria))
         dp.add_handler(CommandHandler("conteo", conteo))
 
         # on noncommand i.e message - Use Watson to process and response message on Telegram
