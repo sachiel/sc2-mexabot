@@ -17,6 +17,7 @@ bot.
 import os
 import json
 import logging
+import requests
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
@@ -64,6 +65,96 @@ def start(update, context):
 def help(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
+
+
+def conteo(update, context):
+    endpoint_url = "https://api.covid19api.com/country/mexico"
+    r = requests.get(endpoint_url)
+    error = False
+    text = ""
+
+    if r.status_code == 200:
+        data = r.json()
+        if data and len(data) > 0:
+            record = data[-1]  # only last item
+            text = "Confirmados: {}. Fallecidos: {}. Recuperados: {}. Activos: {}. {}. Todo México.".format(
+                record['Confirmed'],
+                record['Deaths'],
+                record['Recovered'],
+                record['Active'],
+                record['Date'],
+            )
+
+            context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        else:
+            error = True
+            text = "Error obteniendo dataset"
+    else:
+        error = True
+        text = "Error en consulta a API de api.covid19api.com"
+
+    if error:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+
+
+def hospitales(update, context):
+    hospitals_url = "https://datos.cdmx.gob.mx/api/records/1.0/search/?dataset=hospitales-covid-19&q=&facet=tipo&facet=abreviatura&facet=categoria&facet=entidad"
+    r = requests.get(hospitals_url)
+    error = False
+    text = ""
+
+    if r.status_code == 200:
+        data = r.json()
+        if 'records' in data and data['records']:
+            for record in data['records']:
+                text = "{}, {}, {}, {}.".format(
+                    record['fields']['nombre_del_hospital'],
+                    record['fields']['entidad'],
+                    record['fields']['categoria'],
+                    record['fields']['tipo'],
+                )
+
+                if 'coordenadas' in record['fields'] and len(record['fields']['coordenadas']) > 1:
+                    point = record['fields']['coordenadas']
+                    text = "{} https://maps.google.com/?q={},{}".format(text, point[0], point[1])
+
+                context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        else:
+            error = True
+            text = "Error obteniendo dataset de hospitales"
+    else:
+        error = True
+        text = "Error en consulta a API de datos.cdmx.gob.mx"
+
+    if error:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+
+
+def capacidad_hospitalaria(update, context):
+    hospitals_url = "https://datos.cdmx.gob.mx/api/records/1.0/search/?dataset=capacidad-hospitalaria&q=&facet=fecha&facet=nombre_hospital&facet=institucion&facet=estatus_capacidad_hospitalaria&facet=estatus_capacidad_uci"
+    r = requests.get(hospitals_url)
+    error = False
+    text = ""
+
+    if r.status_code == 200:
+        data = r.json()
+        if 'records' in data and data['records']:
+            for record in data['records']:
+                text = "{}, {}. Capacidad: {}".format(
+                    record['fields']['institucion'],
+                    record['fields']['nombre_hospital'],
+                    record['fields']['estatus_capacidad_hospitalaria'],
+                )
+                context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+        else:
+            error = True
+            text = "Error obteniendo dataset de hospitales"
+    else:
+        error = True
+        text = "Error en consulta a API de datos.cdmx.gob.mx"
+
+    if error:
+        context.bot.send_message(chat_id=update.effective_chat.id, text=text)
 
 
 # Bot Communication
@@ -135,6 +226,9 @@ def main():
         # on different commands - answer in Telegram
         dp.add_handler(CommandHandler("start", start))
         dp.add_handler(CommandHandler("help", help))
+        dp.add_handler(CommandHandler("hospitales", hospitales))
+        dp.add_handler(CommandHandler("capacidad_hospitalaria", capacidad_hospitalaria))
+        dp.add_handler(CommandHandler("conteo", conteo))
 
         # on noncommand i.e message - Use Watson to process and response message on Telegram
         dp.add_handler(MessageHandler(Filters.text, botcomm))
