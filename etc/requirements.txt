@@ -9,7 +9,7 @@ ibm-watson==4.4.1
 idna==2.9
 pkg-resources==0.0.0
 pycparser==2.20
-PyJWT==1.7.1
+PyJWT==2.4.0
 python-dateutil==2.8.1
 python-telegram-bot==12.7
 requests==2.23.0
